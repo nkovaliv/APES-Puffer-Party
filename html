@@ -1,0 +1,437 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>APES Puffer Party</title>
+<style>
+:root{font-family:system-ui,sans-serif;color:#eafaff;background:#061b2c;color-scheme:dark}
+*{box-sizing:border-box}body{margin:0;min-height:100vh;background:radial-gradient(ellipse at top,#154f63,#061b2c 70%)}
+main{max-width:1080px;margin:auto;padding:24px 18px 45px}
+header{display:flex;align-items:center;justify-content:space-between;gap:15px;margin-bottom:22px}
+h1{font-size:clamp(29px,5vw,44px);letter-spacing:-1.5px;margin:3px 0}h2{margin:0 0 15px}
+p{color:#bad5df;line-height:1.6}.tag{text-transform:uppercase;color:#79ebce;letter-spacing:2.6px;font-size:11px;font-weight:800}
+.pill{display:inline-block;border:1px solid #39647a;padding:7px 12px;border-radius:30px;color:#c5e2ec;font-size:12px}
+.card{background:#103045;border:1px solid #2b5469;padding:24px;border-radius:22px}
+.grid{display:grid;grid-template-columns:1.2fr 1fr;gap:18px}
+.row{display:flex;align-items:center;gap:12px;flex-wrap:wrap}.spread{justify-content:space-between}
+label{display:block;font-size:14px;margin:15px 0 7px;color:#c5dfe8}
+input,textarea,select{width:100%;background:#082436;border:1px solid #3c667b;color:white;border-radius:11px;padding:12px 14px;font:inherit}
+input:focus,select:focus,textarea:focus{outline:2px solid #77eacf;outline-offset:2px}
+textarea{min-height:125px;resize:vertical}
+button{background:#78ecd0;color:#062e32;border:0;border-radius:11px;padding:13px 19px;font:inherit;font-weight:750;cursor:pointer}
+button:hover{filter:brightness(1.1)}button:disabled{opacity:.45;cursor:default}
+.secondary{background:#234d64;color:#e6f7ff}.danger{background:#60394b;color:#ffe8ef}
+.full{width:100%;margin-top:20px}.hidden{display:none!important}.help{font-size:13px;line-height:1.7}.fine{font-size:12px;color:#96b6c6}
+ol{color:#c8e1ea;line-height:1.9;padding-left:22px}
+.hero{font-size:78px;text-align:center;background:#0b293c;border-radius:17px;padding:25px;position:relative}
+.hero span{display:inline-block;animation:bob 2.1s ease-in-out infinite}
+@keyframes bob{50%{transform:translateY(-7px) rotate(4deg)}}
+.arena{margin:16px 0 18px;background:radial-gradient(ellipse at 50% 30%,#155d70,#08283f 75%);border:1px solid #315d73;border-radius:24px;overflow:hidden}
+svg{display:block;width:100%;height:auto}
+.station rect{fill:#103b50;stroke:#42677c;stroke-width:1.5;transition:fill .25s,stroke .25s}
+.station.active rect{fill:#225e60;stroke:#92f7d6;stroke-width:3}
+.station.out{opacity:.3}.station .teamname{fill:#f0fcff;font-size:15px;font-weight:750}
+.station .stats{fill:#adcddb;font-size:11px}
+.station.active .teamname{fill:#a0ffe0}
+#pufferFloat{animation:bob 1.15s ease-in-out infinite;transform-box:fill-box;transform-origin:center}
+#inflate{transition:transform .1s}
+#puffer.shaking #pufferFloat{animation:shake .12s infinite}
+@keyframes shake{0%,100%{transform:rotate(-7deg)}50%{transform:rotate(7deg)}}
+.bubble{animation:scatter .85s ease-out forwards}
+@keyframes scatter{to{transform:translate(var(--dx),var(--dy)) scale(.15);opacity:0}}
+.popword{animation:popword .85s ease-out forwards;transform-box:fill-box;transform-origin:center;fill:#fff1a4;font-size:43px;font-weight:950;paint-order:stroke;stroke:#133b51;stroke-width:6}
+@keyframes popword{0%{transform:scale(.2);opacity:0}30%{transform:scale(1.25);opacity:1}100%{transform:scale(1);opacity:1}}
+.prompt{font-size:clamp(23px,3vw,30px);font-weight:800;line-height:1.35;margin:5px 0 12px}
+#holder{font-size:19px;color:#9bf8dc;font-weight:750}
+#message{color:#ffda98;min-height:25px;margin:12px 0 4px;font-size:14px}
+#feedback{color:#9bedda;font-size:14px;min-height:24px}
+.review{background:#193f52;border-radius:15px;padding:18px;margin-top:18px}
+.teamrow{display:flex;justify-content:space-between;gap:12px;padding:12px 14px;border:1px solid #31596e;border-radius:12px;margin:8px 0}
+.teamrow.active{border-color:#8bf3d6;background:#1b4c55}.teamrow.out{opacity:.4}
+.lives{color:#ffb7ad;white-space:nowrap}.teamname{overflow-wrap:anywhere}
+.chip{display:inline-block;background:#244f65;border-radius:8px;padding:6px 10px;margin:4px;font-size:12px}
+#used{max-height:150px;overflow:auto}
+hr{border:0;border-top:1px solid #31556a;margin:20px 0}
+@media(max-width:700px){.grid{grid-template-columns:1fr}.card{padding:18px}main{padding:17px 10px}.arena{margin-left:-4px;margin-right:-4px}header{align-items:flex-start}.pill{font-size:11px}}
+@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+<main>
+<header><div><div class="tag">Think fast · Pass the puffer</div><h1>APES Puffer Party</h1></div><span class="pill">10-second fuse</span></header>
+
+<section id="setup" class="grid">
+<div class="card">
+<h2>Take your place in the reef.</h2>
+<p>Give a valid APES answer to send the puffer swimming to the next team. If it bursts while your team holds it, you lose a life.</p>
+<label for="names">Teams or players — one per line, 2–8 total</label>
+<textarea id="names">Team Mangrove
+Team Coyote
+Team Coral
+Team Redwood</textarea>
+<label for="unit">Question pool</label>
+<select id="unit">
+<option value="all">All APES units</option>
+<option value="1">Unit 1 · Ecosystems</option>
+<option value="2">Unit 2 · Biodiversity</option>
+<option value="3">Unit 3 · Populations</option>
+<option value="4">Unit 4 · Earth systems</option>
+<option value="5">Unit 5 · Land and water use</option>
+<option value="6">Unit 6 · Energy</option>
+<option value="7">Unit 7 · Air pollution</option>
+<option value="8">Unit 8 · Aquatic and terrestrial pollution</option>
+<option value="9">Unit 9 · Global change</option>
+</select>
+<label for="lives">Starting lives</label>
+<select id="lives"><option>2</option><option selected>3</option><option>5</option></select>
+<button class="full" id="start">Bring the teams into the reef →</button>
+<p id="setupError" role="alert"></p>
+</div>
+<div class="card">
+<div class="hero" aria-hidden="true"><span>🐡</span></div>
+<ol>
+<li>Read the category before starting the fuse.</li>
+<li>Type an answer and press Enter to pass.</li>
+<li>Watch the puffer swim to the next team.</li>
+<li>Use a new answer each turn within a round.</li>
+<li>At 10 seconds: inflate, burst, lose a life!</li>
+</ol>
+<p class="help"><strong>The fuse lasts exactly 10 seconds per round.</strong> It keeps ticking during passes. Answers do not reset it or add time. The countdown is hidden.</p>
+<p class="help">Teams share one device or classroom projector. The puffer shows whose turn it is. This version does not connect separate student devices.</p>
+<p class="help">Answers use a curated bank. Pause for a teacher ruling if a scientifically valid answer is missing.</p>
+<span class="pill" id="bankCount"></span>
+</div>
+</section>
+
+<section id="play" class="hidden">
+<div class="row spread">
+<div class="row"><span class="pill" id="roundLabel"></span><span class="pill" id="unitLabel"></span><span class="pill">Fixed fuse · 10 seconds</span></div>
+<button id="pause" class="secondary">Pause / teacher review</button>
+</div>
+
+<div class="arena">
+<svg id="reef" viewBox="0 0 900 540" role="img" aria-label="Team circle. The puffer moves to the team whose turn it is.">
+<defs>
+<radialGradient id="fishColor" cx="35%" cy="25%"><stop stop-color="#ffecb4"/><stop offset="1" stop-color="#e9ad48"/></radialGradient>
+<linearGradient id="sand" x2="0" y2="1"><stop stop-color="#146173"/><stop offset="1" stop-color="#0a354a"/></linearGradient>
+</defs>
+<g opacity=".15" fill="#b9f6ff">
+<circle cx="65" cy="105" r="6"/><circle cx="814" cy="145" r="9"/><circle cx="230" cy="308" r="5"/>
+<circle cx="725" cy="382" r="7"/><circle cx="465" cy="55" r="4"/><circle cx="115" cy="390" r="5"/>
+</g>
+<path d="M0 500 Q100 464 200 498 T400 496 T600 495 T900 490 V540 H0Z" fill="url(#sand)"/>
+<ellipse cx="450" cy="273" rx="309" ry="172" fill="none" stroke="#5dcae3" stroke-opacity=".17" stroke-dasharray="5 10"/>
+<text x="450" y="249" text-anchor="middle" fill="#83c7d8" font-size="12" letter-spacing="4">THE PUFFER CIRCLE</text>
+<text id="centerStatus" x="450" y="280" text-anchor="middle" fill="#e8fcff" font-size="23" font-weight="800">Ready to dive?</text>
+<text id="centerSub" x="450" y="306" text-anchor="middle" fill="#a8d6e5" font-size="12">Read the category. Then start.</text>
+<path id="trail" fill="none" stroke="#97f9df" stroke-width="3" stroke-dasharray="4 8" opacity=".5"/>
+<g id="stations"></g>
+<g id="puffer" transform="translate(450 90)">
+<g id="pufferFloat"><g id="inflate">
+<path d="M-28 -9 L-53 -23 L-47 0 L-53 22 L-28 10" fill="#e7ab43"/>
+<g fill="#f3ca70">
+<path d="M-23 -24 L-25 -43 L-12 -29Z"/><path d="M-5 -32 L3 -49 L9 -30Z"/>
+<path d="M20 -25 L34 -39 L30 -15Z"/><path d="M31 6 L47 12 L31 18Z"/>
+<path d="M17 28 L24 43 L8 31Z"/><path d="M-12 29 L-17 44 L-24 24Z"/>
+</g>
+<ellipse rx="35" ry="32" fill="url(#fishColor)" stroke="#ffd885" stroke-width="1.5"/>
+<g fill="#cc8e36" opacity=".7"><circle cx="-19" cy="-10" r="2.5"/><circle cx="-22" cy="7" r="2"/><circle cx="-9" cy="17" r="2"/><circle cx="0" cy="-20" r="2"/><circle cx="13" cy="23" r="2"/></g>
+<ellipse cx="5" cy="-8" rx="8" ry="10" fill="white"/><ellipse cx="24" cy="-8" rx="8" ry="10" fill="white"/>
+<ellipse cx="8" cy="-6" rx="3.5" ry="5" fill="#173445"/><ellipse cx="27" cy="-6" rx="3.5" ry="5" fill="#173445"/>
+<ellipse cx="19" cy="12" rx="5" ry="6" fill="#76502f"/>
+<path d="M-20 8 Q-36 18 -19 23" fill="#f6cf77"/>
+</g></g>
+</g>
+<g id="effects"></g>
+</svg>
+</div>
+
+<div class="grid">
+<div class="card">
+<div id="holder"></div>
+<div id="prompt" class="prompt"></div>
+<div id="hint" class="help"></div>
+<form id="answerForm">
+<label for="answer">Answer for the team holding the puffer</label>
+<div class="row" style="flex-wrap:nowrap"><input id="answer" autocomplete="off" spellcheck="false" maxlength="100" placeholder="Type an answer…"><button id="submit">Pass →</button></div>
+</form>
+<div id="message" role="status" aria-live="polite"></div>
+<div id="feedback" role="status" aria-live="polite"></div>
+<button id="begin" class="full">Start the 10-second fuse</button>
+
+<div id="result" class="review hidden">
+<strong id="popTitle"></strong><p id="note" class="help"></p>
+<div class="help">More answers that fit:</div><div id="examples"></div>
+<button id="next" class="full">Next round →</button>
+</div>
+
+<div id="teacher" class="review hidden">
+<strong>Paused · teacher review</strong>
+<p class="help">The fuse is stopped. Approve only an answer that fits the category and has not already been used, including as a synonym. Approval passes the puffer and resumes the remaining time.</p>
+<label for="ruling">Answer to review</label><input id="ruling" maxlength="100">
+<div class="row" style="margin-top:12px"><button id="approve">Accept & pass</button><button id="resume" class="secondary">Resume</button></div>
+<p id="reviewMessage" class="help" role="status"></p>
+<hr><button id="quit" class="danger">End match & return to setup</button>
+</div>
+</div>
+
+<aside class="card">
+<h2>Teams & lives</h2><div id="roster"></div>
+<hr><strong>Used this round</strong>
+<p class="help">A synonym counts as the same answer. A repeat does not pass the puffer.</p>
+<div id="used"></div>
+<p class="fine">Lives determine survival. Accepted passes are also counted. Eliminated teams remain visible but are skipped.</p>
+</aside>
+</div>
+</section>
+
+<section id="end" class="card hidden">
+<div class="tag">Last team in the reef</div><h2 id="winner"></h2>
+<p id="endNote"></p><div id="endList"></div><button id="again" class="full">Play another match →</button>
+</section>
+<p class="fine">An original APES classroom game inspired by hot-potato category play. Not affiliated with Krillion or College Board. No student accounts required. Reduced-motion device settings are respected.</p>
+</main>
+<script>
+const raw=[
+[1,"Name a terrestrial biome.","Use a biome rather than an individual habitat.","Temperature and precipitation help determine biome distribution.",
+["tropical rainforest|tropical rain forest","tropical dry forest|tropical seasonal forest","savanna|tropical grassland","desert|subtropical desert","temperate grassland|prairie|steppe","temperate deciduous forest|temperate seasonal forest","temperate rainforest|temperate rain forest","boreal forest|taiga","tundra|arctic tundra","chaparral|woodland shrubland"]],
+[1,"Name a process that moves carbon between reservoirs.","Name a process, not a reservoir.","Carbon moves among organisms, the atmosphere, soil, oceans, and rocks.",
+["photosynthesis","cellular respiration|respiration","decomposition|decay","combustion|burning","ocean uptake|ocean absorption|dissolution","outgassing|ocean release","sedimentation","burial","volcanic eruption|volcanism","weathering","fossilization"]],
+[1,"Name a process in the nitrogen cycle.","Give a process rather than a nitrogen compound.","Microbes transform nitrogen into forms with different biological roles.",
+["nitrogen fixation|fixation","nitrification","ammonification|mineralization","denitrification","assimilation|plant uptake","anammox|anaerobic ammonium oxidation"]],
+[1,"Name an aquatic ecosystem or aquatic life zone.","Use a habitat, ecosystem, or recognized aquatic zone.","Salinity, light, depth, and water movement shape aquatic communities.",
+["estuary","coral reef","mangrove forest|mangrove","salt marsh","freshwater wetland|wetland","lake","pond","river","stream","intertidal zone|intertidal","open ocean|pelagic zone","benthic zone|benthic","abyssal zone|abyssal","littoral zone|littoral","limnetic zone|limnetic","profundal zone|profundal"]],
+[2,"Name a threat to biodiversity.","Give a human-driven pressure or environmental change.","Biodiversity can decline through habitat loss, invasive species, exploitation, pollution, and climate change.",
+["habitat loss|habitat destruction","habitat fragmentation|fragmentation","invasive species","overharvesting|overexploitation","overfishing","poaching","pollution","climate change|global warming","deforestation","ocean acidification","urbanization","agricultural expansion"]],
+[2,"Name an ecosystem service.","Give a service or benefit supplied by ecosystems.","Ecosystem services include provisioning, regulating, cultural, and supporting benefits.",
+["pollination","water purification|water filtration","carbon sequestration|carbon storage","flood control|flood protection","erosion control|soil stabilization","nutrient cycling","soil formation","food production|food","timber|wood","recreation|ecotourism","climate regulation","oxygen production","water regulation","habitat provision|habitat","medicines|medicine"]],
+[2,"Name a strategy for conserving biodiversity.","Give a conservation action.","Conservation can protect populations directly or restore habitat and connections.",
+["protected areas|protected area|nature reserves|national parks","wildlife corridors|wildlife corridor|habitat corridors","habitat restoration|ecological restoration","captive breeding","seed banks|seed bank","invasive species removal|invasive species control","anti poaching|anti poaching enforcement","sustainable harvesting","marine protected areas|marine protected area","reforestation","conservation easements|conservation easement","wildlife crossings|wildlife crossing"]],
+[3,"Name a density-dependent limiting factor.","Its effect generally increases with population density.","Competition and disease transmission often intensify at higher densities.",
+["competition","disease","parasitism|parasites","predation","food competition|competition for food","water competition|competition for water","space competition|competition for space","competition for mates|mate competition","territoriality"]],
+[3,"Name a density-independent disturbance.","Choose a physical disturbance rather than a biological interaction.","Physical disturbances can limit populations regardless of crowding.",
+["drought","flood|flooding","hurricane","tornado","wildfire|forest fire","earthquake","volcanic eruption","tsunami","freeze|frost|extreme cold","heat wave|heatwave","habitat destruction","pesticide application|pesticide spraying"]],
+[3,"Name a trait associated with r-selected species.","Give a life-history trait rather than an animal.","The r/K framework describes broad tendencies; species do not always fit every trait.",
+["many offspring|high fecundity|high reproductive rate","early maturity|early reproduction|early sexual maturity","little parental care|no parental care|low parental care","short lifespan|short life span","small body size|small size","rapid development|fast development","short generation time","small offspring","type iii survivorship|type 3 survivorship"]],
+[4,"Name a process or agent of physical weathering.","Physical weathering breaks rock without changing its chemical composition.","Ice, roots, abrasion, and temperature changes can break rock into smaller pieces.",
+["frost wedging|ice wedging|freeze thaw","abrasion","root wedging|root growth|roots","thermal expansion|temperature changes|thermal stress","exfoliation|unloading","salt crystal growth|salt crystallization","animal burrowing|burrowing"]],
+[4,"Name a soil property you could measure.","Give a property rather than a soil horizon.","Soil properties influence infiltration, nutrient availability, and plant growth.",
+["ph|soil ph","texture|soil texture","porosity","permeability","water holding capacity|water retention","organic matter|organic matter content","nitrogen content|nitrogen","phosphorus content|phosphorus","potassium content|potassium","salinity","bulk density","moisture|soil moisture","cation exchange capacity|cec","infiltration rate"]],
+[4,"Name a process in the hydrologic cycle.","Give a movement or phase change involving water.","Solar energy and gravity drive water movement among reservoirs.",
+["evaporation","transpiration","evapotranspiration","condensation","precipitation","infiltration","percolation","runoff|surface runoff","groundwater flow","sublimation","deposition","snowmelt|melting"]],
+[5,"Name a practice that reduces soil erosion.","Give a land-management action.","Keeping soil covered and slowing runoff help retain topsoil.",
+["no till farming|no till|conservation tillage","contour plowing|contour farming","terracing|terrace farming","cover crops|cover cropping","windbreaks|windbreak|shelterbelts","strip cropping","crop rotation","riparian buffers|riparian buffer","reforestation","mulching|mulch","reduced tillage","managed grazing|rotational grazing"]],
+[5,"Name a strategy for reducing agricultural water use.","Give a practice or technology.","Efficient irrigation and crop choices can reduce water withdrawals.",
+["drip irrigation|drip","soil moisture sensors|soil moisture sensor","drought tolerant crops|drought resistant crops","mulching|mulch","night irrigation|irrigating at night","deficit irrigation","repair leaks|fix leaks|leak repair","precision irrigation","rainwater harvesting"]],
+[5,"Name an integrated pest management tactic.","Name a tactic rather than simply saying IPM.","IPM combines monitoring and multiple controls, using pesticides selectively when needed.",
+["crop rotation","biological control|natural predators","pheromone traps|pheromone trap","mechanical removal|hand removal|hand picking","resistant crops|pest resistant crops","trap crops|trap cropping","monitoring|scouting","economic thresholds|action thresholds","targeted pesticide use|selective pesticide use","sterile insect technique|sterile males","intercropping","habitat for beneficial insects"]],
+[6,"Name a renewable energy source or technology.","Give a source or generation technology.","Renewable sources replenish but still have environmental tradeoffs.",
+["solar|solar energy|solar power","wind|wind energy|wind power","hydroelectric|hydropower|hydroelectric power","geothermal|geothermal energy","biomass|biomass energy","tidal|tidal power|tidal energy","wave energy|wave power","biogas","solar thermal","photovoltaics|solar photovoltaic|solar pv"]],
+[6,"Name a strategy that reduces building energy demand.","Give a design choice, behavior, or efficiency measure.","Reducing demand can avoid energy production and its associated impacts.",
+["insulation|better insulation","led lighting|led lights|leds","weatherization|air sealing|weather stripping","double pane windows|double glazing","passive solar design|passive solar","heat pumps|heat pump","smart thermostat|programmable thermostat","efficient appliances|energy efficient appliances","green roof|green roofs","cool roof|reflective roof","daylighting|natural lighting","turn off lights","energy audit"]],
+[6,"Name an environmental impact of fossil fuel extraction or use.","Give an environmental effect rather than a fuel.","Fossil fuels cause impacts during extraction, transport, combustion, and waste disposal.",
+["climate change|global warming","acid deposition|acid rain","air pollution","water pollution","oil spills|oil spill","habitat destruction|habitat loss","habitat fragmentation","methane leakage|methane leaks","land subsidence|subsidence","thermal pollution","ocean acidification","coal ash contamination|coal ash pollution","groundwater contamination"]],
+[7,"Name a primary air pollutant.","Give a substance emitted directly by a source.","Primary pollutants are emitted directly; secondary pollutants form through atmospheric reactions.",
+["carbon monoxide|co","sulfur dioxide|so2","nitric oxide|no","nitrogen dioxide|no2","nitrogen oxides|nox","particulate matter|pm|pm2.5|pm10|soot","volatile organic compounds|vocs|voc","lead|pb","ammonia|nh3","carbon dioxide|co2","methane|ch4"]],
+[7,"Name a source of indoor air pollution.","Give a source found in or affecting buildings.","Indoor pollution can come from combustion, materials, soil gases, and biological sources.",
+["tobacco smoke|cigarette smoke|smoking","radon|radon from soil","mold|mould","gas stove|gas stoves","wood stove|wood burning stove","asbestos|asbestos insulation","cleaning products|cleaners","paint|paints","pressed wood|particleboard","furniture","fireplace","dust mites","pet dander","kerosene heater"]],
+[7,"Name a way to reduce outdoor air pollution.","Give a control technology or source-reduction practice.","Emission controls and reduced fuel combustion can lower pollutant exposure.",
+["catalytic converter|catalytic converters","scrubber|scrubbers","electrostatic precipitator|electrostatic precipitators","baghouse filter|baghouse filters","public transit|public transportation","carpooling|carpool","cycling|biking","walking","renewable energy","low sulfur fuel|low sulfur fuels","electric vehicles|electric cars","energy efficiency","vapor recovery|vapor recovery nozzle","selective catalytic reduction"]],
+[8,"Name a source of nutrient pollution in water.","Give a source that introduces nitrogen or phosphorus.","Excess nutrients can cause eutrophication and oxygen depletion during decomposition.",
+["fertilizer runoff|fertilizer","manure runoff|manure","sewage|untreated sewage","septic systems|leaking septic systems","wastewater effluent|treated wastewater","phosphate detergents","aquaculture waste|fish farm waste","urban runoff|stormwater runoff","atmospheric deposition","pet waste"]],
+[8,"Name a wastewater treatment process or stage.","Use a recognized treatment step or process.","Different treatment processes remove solids, organic matter, pathogens, or nutrients.",
+["screening","grit removal","sedimentation|settling","primary treatment","secondary treatment","tertiary treatment|advanced treatment","aeration","activated sludge","trickling filter|trickling filters","chlorination","uv disinfection|ultraviolet disinfection","ozonation","anaerobic digestion","nutrient removal","filtration","reverse osmosis"]],
+[8,"Name a strategy that reduces solid waste sent to landfills.","Give a specific action or management approach.","Source reduction, reuse, recycling, and composting can reduce disposal demand.",
+["source reduction|reduce consumption","reuse|reusing","recycling|recycle","composting|compost","repair|repairing","refill containers|refillable containers","reusable bags","reusable bottles|reusable water bottle","donate|donation","buy in bulk|bulk purchasing","reduce packaging|less packaging","food waste prevention|reduce food waste","anaerobic digestion","upcycling"]],
+[9,"Name a greenhouse gas.","Name a gas rather than an emission source.","Greenhouse gases absorb outgoing infrared radiation.",
+["carbon dioxide|co2","methane|ch4","nitrous oxide|n2o","water vapor|water vapour|h2o","ozone|o3","chlorofluorocarbons|cfcs|cfc","hydrofluorocarbons|hfcs|hfc","sulfur hexafluoride|sf6","perfluorocarbons|pfcs|pfc","nitrogen trifluoride|nf3"]],
+[9,"Name a potential impact of climate change.","Give a physical, ecological, or human consequence.","Climate impacts vary by region and can interact with other environmental pressures.",
+["sea level rise|rising sea level","glacial melting|melting glaciers","ice sheet loss|melting ice sheets","sea ice loss|melting sea ice","heat waves|heatwaves","coral bleaching","species range shifts|range shifts","phenology shifts|earlier flowering|timing shifts","drought","wildfires|wildfire","coastal flooding","permafrost thaw|thawing permafrost","ocean warming","crop yield changes","disease range expansion","increased heavy precipitation"]],
+[9,"Name a strategy for mitigating climate change.","Mitigation reduces emissions or increases carbon removal.","Mitigation addresses causes; adaptation reduces harm from impacts.",
+["renewable energy","energy efficiency","reforestation","afforestation","avoided deforestation|prevent deforestation|forest protection","carbon capture and storage|ccs","public transit|public transportation","electric vehicles|electric cars","methane capture|methane leak reduction","reduced meat consumption|eat less meat","soil carbon sequestration","wetland restoration","carbon tax|carbon pricing","cap and trade","heat pumps|heat pump","reduce food waste"]]
+];
+
+const $=id=>document.getElementById(id);
+const ns="http://www.w3.org/2000/svg";
+const reduced=()=>matchMedia('(prefers-reduced-motion: reduce)').matches;
+const norm=s=>s.toLowerCase().normalize("NFKD").replace(/[\u0300-\u036f]/g,"").replace(/[^a-z0-9]/g,"");
+const bank=raw.map((r,id)=>({id,unit:r[0],prompt:r[1],hint:r[2],note:r[3],answers:r[4].map(s=>({name:s.split("|")[0],keys:s.split("|").map(norm)}))}));
+let players=[],pool=[],deck=[],q=null,turn=0,round=0,phase="setup",remaining=10000,deadline=0,raf=0;
+let used=new Set(),usedKeys=new Set(),history=[],lastText="",docks=[],stationEls=[],fishPos={x:450,y:90},flight=null;
+function show(id,on=true){$(id).classList.toggle("hidden",!on)}
+function svgEl(tag,attrs={},text){let el=document.createElementNS(ns,tag);Object.entries(attrs).forEach(([k,v])=>el.setAttribute(k,v));if(text!==undefined)el.textContent=text;return el}
+function shuffle(a){a=a.slice();for(let i=a.length-1;i>0;i--){let j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a}
+function nextAlive(i){for(let k=1;k<=players.length;k++){let j=(i+k)%players.length;if(players[j].lives>0)return j}return i}
+function enableAnswer(on){$("answer").disabled=!on;$("submit").disabled=!on}
+function positionFish(p,angle=0){fishPos={x:p.x,y:p.y};$("puffer").setAttribute("transform",`translate(${p.x} ${p.y}) rotate(${angle})`)}
+function clearFlight(){flight=null;$("trail").setAttribute("d","");if(docks[turn])positionFish(docks[turn])}
+function stop(){cancelAnimationFrame(raf);raf=0}
+function chips(id,items){$(id).replaceChildren();items.forEach(t=>{let s=document.createElement("span");s.className="chip";s.textContent=t;$(id).append(s)})}
+function buildCircle(){
+ $("stations").replaceChildren();docks=[];stationEls=[];
+ players.forEach((p,i)=>{
+ const angle=-Math.PI/2+i*Math.PI*2/players.length;
+ const x=450+320*Math.cos(angle),y=289+177*Math.sin(angle);
+ docks.push({x,y:y-45});
+ const g=svgEl("g",{class:"station",transform:`translate(${x} ${y})`});
+ g.append(svgEl("title",{},p.name));
+ g.append(svgEl("rect",{x:-77,y:-20,width:154,height:56,rx:13}));
+ g.append(svgEl("text",{class:"teamname",x:0,y:2,"text-anchor":"middle"},p.name.length>18?p.name.slice(0,17)+"…":p.name));
+ const stats=svgEl("text",{class:"stats",x:0,y:22,"text-anchor":"middle"});
+ g.append(stats);$("stations").append(g);stationEls.push({g,stats});
+ });
+}
+function roster(){
+ $("roster").replaceChildren();
+ players.forEach((p,i)=>{
+ let d=document.createElement("div");d.className="teamrow"+(i===turn?" active":"")+(p.lives===0?" out":"");
+ let a=document.createElement("div"),n=document.createElement("strong");n.className="teamname";n.textContent=p.name;a.append(n);
+ let s=document.createElement("div");s.className="fine";s.textContent=p.passes+" accepted passes";a.append(s);
+ let life=document.createElement("div");life.className="lives";life.textContent=p.lives?"♥ ".repeat(p.lives):"Out";life.setAttribute("aria-label",p.lives+" lives");
+ d.append(a,life);$("roster").append(d);
+ stationEls[i].g.setAttribute("class","station"+(i===turn?" active":"")+(p.lives===0?" out":""));
+ stationEls[i].stats.textContent=p.lives?`${"♥ ".repeat(p.lives)} · ${p.passes} passes`:"ELIMINATED";
+ });
+ $("holder").textContent=players[turn].name+" holds the puffer";
+}
+function newRound(){
+ stop();round++;used=new Set();usedKeys=new Set();history=[];lastText="";remaining=10000;
+ if(!deck.length){deck=shuffle(pool);if(q&&deck.length>1&&deck[0].id===q.id)[deck[0],deck[1]]=[deck[1],deck[0]]}
+ q=deck.shift();phase="ready";clearFlight();
+ $("effects").replaceChildren();$("puffer").style.visibility="visible";$("puffer").classList.remove("shaking");$("inflate").setAttribute("transform","scale(1)");
+ $("roundLabel").textContent="Round "+round;$("unitLabel").textContent="Unit "+q.unit;
+ $("prompt").textContent=q.prompt;$("hint").textContent=q.hint;
+ $("centerStatus").textContent="Get ready";$("centerSub").textContent="Read the category. Then start.";
+ $("answer").value="";$("message").textContent="";$("feedback").textContent="";
+ $("used").textContent="No answers yet.";show("result",false);show("teacher",false);show("begin");
+ $("pause").disabled=true;enableAnswer(false);roster();
+}
+function run(){
+ phase="running";deadline=Date.now()+remaining;stop();show("teacher",false);$("pause").disabled=false;
+ $("centerStatus").textContent="The fuse is live";$("centerSub").textContent="Think fast. Pass the puffer!";
+ enableAnswer(true);$("answer").focus();raf=requestAnimationFrame(tick);
+}
+function tick(now){
+ if(phase!=="running")return;
+ let left=deadline-Date.now();
+ if(left<=0){pop();return}
+ let growth=1+Math.min(1,Math.max(0,1-left/10000))*.5;
+ $("inflate").setAttribute("transform",`scale(${growth})`);
+ $("puffer").classList.toggle("shaking",left<2200&&!flight);
+ if(flight){
+ const t=Math.min(1,(now-flight.start)/flight.duration),u=1-t;
+ let x=u*u*flight.from.x+2*u*t*flight.control.x+t*t*flight.to.x;
+ let y=u*u*flight.from.y+2*u*t*flight.control.y+t*t*flight.to.y;
+ positionFish({x,y},Math.sin(t*Math.PI)*12);
+ if(t>=1){clearFlight();enableAnswer(true);$("answer").focus();$("centerStatus").textContent="The fuse is live"}
+ }
+ raf=requestAnimationFrame(tick);
+}
+function startFlight(from){
+ let to=docks[turn];
+ if(reduced()){clearFlight();enableAnswer(true);$("answer").focus();return}
+ const control={x:(from.x+to.x)/2,y:(from.y+to.y)/2-65};
+ flight={from,to,control,start:performance.now(),duration:420};
+ $("trail").setAttribute("d",`M${from.x} ${from.y} Q${control.x} ${control.y} ${to.x} ${to.y}`);
+ $("centerStatus").textContent="Pass the puffer!";enableAnswer(false);
+}
+function pause(){
+ if(phase!=="running")return;
+ if(Date.now()>=deadline){pop();return}
+ remaining=deadline-Date.now();phase="paused";stop();clearFlight();enableAnswer(false);
+ $("centerStatus").textContent="Paused";$("centerSub").textContent="The fuse is stopped.";
+ $("puffer").classList.remove("shaking");
+ $("ruling").value=$("answer").value||lastText;$("reviewMessage").textContent="";show("teacher");$("pause").disabled=true;
+}
+function duplicate(key,idx){return usedKeys.has(key)||(idx>=0&&used.has(idx))}
+function accept(text,idx,teacher=false){
+ if(phase!=="running"&&phase!=="paused")return;
+ if(phase==="running"&&Date.now()>=deadline){pop();return}
+ let key=norm(text);
+ if(!key)return;
+ if(duplicate(key,idx)){if(teacher)$("reviewMessage").textContent="Already used this round, including as a synonym.";return}
+ usedKeys.add(key);if(idx>=0){used.add(idx);q.answers[idx].keys.forEach(k=>usedKeys.add(k))}
+ let label=idx>=0?q.answers[idx].name:text.trim(),previous=players[turn].name,from={...fishPos};
+ history.push(label+(teacher?" · teacher accepted":""));players[turn].passes++;turn=nextAlive(turn);
+ $("answer").value="";lastText="";$("message").textContent="";
+ $("feedback").textContent=previous+": "+label+" ✓ → "+players[turn].name;
+ chips("used",history);roster();
+ if(teacher){clearFlight();run()}else startFlight(from);
+}
+function submit(e){
+ e.preventDefault();if(phase!=="running"||flight)return;
+ if(Date.now()>=deadline){pop();return}
+ let text=$("answer").value.trim(),key=norm(text);
+ if(!key){$("message").textContent="Enter an answer to pass.";return}
+ lastText=text;let idx=q.answers.findIndex(a=>a.keys.includes(key));
+ if(duplicate(key,idx)){$("message").textContent="Already used! Try another answer. The fuse is still live.";return}
+ if(idx<0){$("message").textContent="Not recognized. Try another answer or pause for a teacher ruling. The fuse is still live.";return}
+ accept(text,idx);
+}
+function burst(){
+ const p=docks[turn];$("effects").replaceChildren();$("puffer").style.visibility="hidden";
+ if(!reduced()){
+ for(let i=0;i<24;i++){
+ const angle=i*Math.PI*2/24,dist=60+(i%5)*17;
+ let bubble=svgEl("circle",{cx:p.x,cy:p.y,r:5+i%5,fill:i%3===0?"#ffdf8d":"#a1f5ee","fill-opacity":.8,stroke:"#eaffff","stroke-width":1,class:"bubble"});
+ bubble.style.setProperty("--dx",Math.cos(angle)*dist+"px");bubble.style.setProperty("--dy",Math.sin(angle)*dist+"px");$("effects").append(bubble);
+ }
+ }
+ $("effects").append(svgEl("text",{x:p.x,y:p.y+9,"text-anchor":"middle",class:"popword"},"POP!"));
+}
+function pop(){
+ if(phase!=="running")return;
+ stop();phase="popped";clearFlight();players[turn].lives--;enableAnswer(false);$("pause").disabled=true;
+ $("puffer").classList.remove("shaking");burst();roster();
+ const p=players[turn];$("centerStatus").textContent="Puffer popped!";$("centerSub").textContent="The holding team loses one life.";
+ $("message").textContent="";$("feedback").textContent="";
+ $("popTitle").textContent=p.name+(p.lives?" has "+p.lives+" "+(p.lives===1?"life":"lives")+" left.":" is out of this match.");
+ $("note").textContent=q.note;
+ chips("examples",q.answers.filter((a,i)=>!used.has(i)).slice(0,6).map(a=>a.name));
+ if(!q.answers.some((a,i)=>!used.has(i)))$("examples").textContent="You found every answer in this category’s bank!";
+ show("result");show("teacher",false);
+ $("next").textContent=players.filter(p=>p.lives>0).length===1?"See the winner →":"Next round →";
+}
+function finish(){
+ stop();phase="ended";show("play",false);show("end");
+ const champion=players.find(p=>p.lives>0);$("winner").textContent=champion.name+" wins!";
+ $("endNote").textContent=round+" rounds played. Each team: explain one new APES term you heard and why it fit the category.";
+ $("endList").replaceChildren();
+ [...players].sort((a,b)=>b.lives-a.lives||b.passes-a.passes).forEach(p=>{
+ const d=document.createElement("div");d.className="teamrow";
+ const n=document.createElement("strong");n.textContent=p.name;const s=document.createElement("span");s.textContent=p.lives+" lives · "+p.passes+" passes";d.append(n,s);$("endList").append(d);
+ });
+}
+function back(){stop();phase="setup";flight=null;show("setup");show("play",false);show("end",false)}
+$("bankCount").textContent=bank.length+" categories · all 9 APES units";
+$("start").onclick=()=>{
+ let names=$("names").value.split("\n").map(s=>s.trim()).filter(Boolean);
+ if(names.length<2||names.length>8){$("setupError").textContent="Enter 2–8 players or teams, one per line.";return}
+ if(names.some(n=>n.length>35)){$("setupError").textContent="Keep each name to 35 characters or fewer.";return}
+ if(new Set(names.map(n=>n.toLowerCase())).size!==names.length){$("setupError").textContent="Give each team a different name.";return}
+ $("setupError").textContent="";
+ players=names.map(name=>({name,lives:+$("lives").value,passes:0}));
+ pool=bank.filter(q=>$("unit").value==="all"||q.unit===+$("unit").value);
+ deck=[];q=null;round=0;turn=Math.floor(Math.random()*players.length);
+ show("setup",false);show("end",false);show("play");buildCircle();newRound();
+};
+$("begin").onclick=()=>{if(phase!=="ready")return;remaining=10000;show("begin",false);run()};
+$("answerForm").onsubmit=submit;$("pause").onclick=pause;
+$("resume").onclick=()=>{if(phase==="paused")run()};
+$("approve").onclick=()=>{
+ if(phase!=="paused")return;
+ let text=$("ruling").value.trim(),key=norm(text);
+ if(!key){$("reviewMessage").textContent="Enter the answer being approved.";return}
+ accept(text,q.answers.findIndex(a=>a.keys.includes(key)),true);
+};
+$("next").onclick=()=>{
+ if(phase!=="popped")return;
+ if(players.filter(p=>p.lives>0).length===1){finish();return}
+ turn=nextAlive(turn);newRound();
+};
+$("quit").onclick=back;$("again").onclick=back;
+document.addEventListener("visibilitychange",()=>{if(document.hidden&&phase==="running")pause()});
+</script>
+</body>
+</html>
